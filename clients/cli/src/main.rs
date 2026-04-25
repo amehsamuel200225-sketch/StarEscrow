@@ -820,8 +820,54 @@ mod xdr;
 mod tests {
     use super::*;
     use clap::Parser;
-    #[test] fn test_dry_run_flag_parsing() {
+    #[test]
+    fn test_dry_run_flag_parsing() {
         let cli = Cli::try_parse_from(["star-escrow", "--dry-run", "status", "--contract-id", "C1"]).unwrap();
         assert!(cli.dry_run);
+    }
+    #[test]
+    fn test_dry_run_flag_absent() {
+        let cli = Cli::try_parse_from(["star-escrow", "status", "--contract-id", "C1"]).unwrap();
+        assert!(!cli.dry_run);
+    }
+    #[test]
+    fn test_dry_run_with_json_flag() {
+        let cli = Cli::try_parse_from(["star-escrow", "--dry-run", "--json", "status", "--contract-id", "C1"]).unwrap();
+        assert!(cli.dry_run);
+        assert!(cli.json);
+    }
+    #[test]
+    fn test_dry_run_with_create_command() {
+        let cli = Cli::try_parse_from(["star-escrow", "--dry-run", "create", "--contract-id", "C1", "--payer-secret", "S1", "--freelancer", "G1", "--token", "T1", "--amount", "100", "--milestone", "M1"]).unwrap();
+        assert!(cli.dry_run);
+        if let Commands::Create { amount, .. } = cli.command { assert_eq!(amount, 100); } else { panic!("Expected Create"); }
+    }
+    #[test]
+    fn test_dry_run_with_approve_command() {
+        let cli = Cli::try_parse_from(["star-escrow", "--dry-run", "approve", "--contract-id", "C1", "--payer-secret", "S1"]).unwrap();
+        assert!(cli.dry_run);
+        assert!(matches!(cli.command, Commands::Approve { .. }));
+    }
+    #[test]
+    fn test_dry_run_with_cancel_command() {
+        let cli = Cli::try_parse_from(["star-escrow", "--dry-run", "cancel", "--contract-id", "C1", "--payer-secret", "S1"]).unwrap();
+        assert!(cli.dry_run);
+        assert!(matches!(cli.command, Commands::Cancel { .. }));
+    }
+    #[test]
+    fn test_dry_run_with_submit_work_command() {
+        let cli = Cli::try_parse_from(["star-escrow", "--dry-run", "submit-work", "--contract-id", "C1", "--freelancer-secret", "S1"]).unwrap();
+        assert!(cli.dry_run);
+        assert!(matches!(cli.command, Commands::SubmitWork { .. }));
+    }
+    #[test]
+    fn test_dry_run_flag_after_subcommand() {
+        let cli = Cli::try_parse_from(["star-escrow", "approve", "--dry-run", "--contract-id", "C1", "--payer-secret", "S1"]).unwrap();
+        assert!(cli.dry_run);
+    }
+    #[test]
+    fn test_network_rpc_urls() {
+        assert_eq!(Network::Testnet.rpc_url(), "https://soroban-testnet.stellar.org");
+        assert_eq!(Network::Mainnet.rpc_url(), "https://soroban-mainnet.stellar.org");
     }
 }
